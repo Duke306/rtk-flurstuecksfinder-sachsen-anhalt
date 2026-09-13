@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.log
+.env
+rtk.env
+.venv/
+venv/
+data/*.sqlite
+data/*.sqlite.*
+data/*.mbtiles
+data/*.json
+*.zip
+*.part
+.DS_Store
+Thumbs.db

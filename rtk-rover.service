@@ -1,0 +1,19 @@
+[Unit]
+Description=RTK Flurstuecksfinder Sachsen-Anhalt
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+SupplementaryGroups=dialout
+WorkingDirectory=/home/pi/rtk-rover
+ExecStart=/usr/bin/python3 /home/pi/rtk-rover/app.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/home/pi/rtk-rover/rtk.env
+
+[Install]
+WantedBy=multi-user.target
