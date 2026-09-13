@@ -133,6 +133,18 @@ class ParcelDB:
         gj=self.geom_geojson(p['polys']); meta={k:v for k,v in p.items() if k!='polys'}
         return {'type':'Feature','properties':meta,'geometry':gj}
 
+    SUMMARY_COLS=('id','flstkennz','kreis','kreisschl','gemeinde','gmdschl','gemarkung','gemaschl',
+                  'flur','zaehler','nenner','flaeche','lage','aktualit','minx','maxx','miny','maxy','nummer')
+
+    def parcel_and_geojson(self,pid):
+        """Single-query equivalent of get(pid,False) + parcel_geojson(pid)."""
+        p=self.get(pid,True)
+        if not p:return None,None
+        meta={k:v for k,v in p.items() if k!='polys'}
+        summary={k:meta[k] for k in self.SUMMARY_COLS if k in meta}
+        gj={'type':'Feature','properties':meta,'geometry':self.geom_geojson(p['polys'])}
+        return summary,gj
+
     def targets(self,pid,spacing=0.0):
         p=self.get(pid,True)
         if not p:return []
