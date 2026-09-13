@@ -244,7 +244,7 @@ def flurstuecke():
 @app.route('/api/parcel/<int:pid>')
 def parcel(pid):
     if not db_required():return jsonify(error='Keine ALKIS-Datenbank'),404
-    p=parcels.get(pid,False);gj=parcels.parcel_geojson(pid)
+    p,gj=parcels.parcel_and_geojson(pid)
     if not p:return jsonify(error='nicht gefunden'),404
     return jsonify(parcel=p,feature=gj)
 @app.route('/api/parcel/<int:pid>/targets')
