@@ -81,7 +81,7 @@ Danach neu starten.
 ### 2. Repository installieren
 
 ```bash
-git clone https://github.com/DEIN-USER/rtk-flurstuecksfinder-sachsen-anhalt.git
+git clone https://github.com/Duke306/rtk-flurstuecksfinder-sachsen-anhalt.git
 cd rtk-flurstuecksfinder-sachsen-anhalt
 chmod +x install.sh
 ./install.sh
