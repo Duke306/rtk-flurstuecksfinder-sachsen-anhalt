@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Geometrie-Cache mit unveränderlichen Werten, maximal 128 Einträgen und 8 MiB bilanziertem Speicherbudget (#3)
+- Gebündelte Koordinatenumrechnung für Geometrien und Navigationsziele (#4)
+- Kartenstil ohne JSON-Kopierrundlauf; Vorlage bleibt unverändert (#6)
+- Flurstückszuordnung prüft weiterhin jede aktuelle Position ohne Bewegungsschwelle
+
 ## 0.6.0 — 2026-09
 
 - Integration erhält den Ein-Abfrage-Fix aus PR #7

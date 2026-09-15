@@ -1,5 +1,48 @@
-import sqlite3, json, zlib, math, threading
+import sqlite3, json, zlib, math, threading, sys
+from collections import OrderedDict
 from pyproj import Transformer
+
+class _GeometryCache:
+    """Process-wide LRU with immutable values and a retained-size budget.
+
+    Accounting includes blob keys, nested tuples/floats and an entry allowance.
+    This limits retained cache data, not transient JSON decoding or total RSS.
+    """
+    def __init__(self, max_entries=128, max_bytes=8 * 1024 * 1024):
+        self.max_entries = max_entries
+        self.max_bytes = max_bytes
+        self.entries = OrderedDict()
+        self.retained_bytes = 0
+        self.lock = threading.Lock()
+
+    @staticmethod
+    def _size(value):
+        return sys.getsizeof(value) + (sum(_GeometryCache._size(x) for x in value)
+                                     if isinstance(value, tuple) else 0)
+
+    def decode(self, blob):
+        with self.lock:
+            if blob in self.entries:
+                self.entries.move_to_end(blob)
+                return self.entries[blob][0]
+            d = json.loads(zlib.decompress(blob))
+            x0, y0 = d['x'] / 1000.0, d['y'] / 1000.0
+            polys = tuple(tuple(tuple((x0 + xy[0] / 1000.0, y0 + xy[1] / 1000.0)
+                                      for xy in ring) for ring in poly) for poly in d['p'])
+            size = sys.getsizeof(blob) + self._size(polys) + 512
+            if self.max_entries <= 0 or size > self.max_bytes:
+                return polys
+            while self.entries and (len(self.entries) >= self.max_entries
+                                    or self.retained_bytes + size > self.max_bytes):
+                _, (_, old_size) = self.entries.popitem(last=False)
+                self.retained_bytes -= old_size
+            self.entries[blob] = (polys, size)
+            self.retained_bytes += size
+            return polys
+
+
+_geometry_cache = _GeometryCache()
+
 
 class ParcelDB:
     def __init__(self, path):
@@ -19,9 +62,7 @@ class ParcelDB:
 
     @staticmethod
     def decode_geom(blob):
-        d=json.loads(zlib.decompress(blob))
-        x0=d['x']/1000.0; y0=d['y']/1000.0
-        return [[[[x0+xy[0]/1000.0,y0+xy[1]/1000.0] for xy in ring] for ring in poly] for poly in d['p']]
+        return _geometry_cache.decode(blob)
 
     @staticmethod
     def _in_ring(x,y,ring):
@@ -122,7 +163,12 @@ class ParcelDB:
         for poly in polys:
             rr=[]
             for ring in poly:
-                rr.append([list(self.to_geo.transform(x,y)) for x,y in ring])
+                if not ring:
+                    rr.append([])
+                    continue
+                xs, ys = zip(*ring)
+                lons, lats = self.to_geo.transform(xs, ys)
+                rr.append([list(xy) for xy in zip(lons, lats)])
             coords.append(rr)
         if len(coords)==1:return {'type':'Polygon','coordinates':coords[0]}
         return {'type':'MultiPolygon','coordinates':coords}

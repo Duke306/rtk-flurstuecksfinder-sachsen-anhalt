@@ -338,8 +338,9 @@ MAP_STYLE = {
 
 @app.route('/api/map/style')
 def map_style():
-    style = json.loads(json.dumps(MAP_STYLE))
-    style['sources']['osm']['tiles'] = [request.url_root.rstrip('/') + '/tiles/{z}/{x}/{y}.pbf']
+    osm = {**MAP_STYLE['sources']['osm'],
+           'tiles': [request.url_root.rstrip('/') + '/tiles/{z}/{x}/{y}.pbf']}
+    style = {**MAP_STYLE, 'sources': {**MAP_STYLE['sources'], 'osm': osm}}
     return jsonify(style)
 
 
@@ -416,8 +417,10 @@ def parcel_targets(pid):
     except Exception:
         spacing = 0
     ts = parcels.targets(pid, spacing)
-    for t in ts:
-        t['lon'], t['lat'] = utm_to_geo.transform(t['E'], t['N'])
+    if ts:
+        lons, lats = utm_to_geo.transform([t['E'] for t in ts], [t['N'] for t in ts])
+        for t, lon, lat in zip(ts, lons, lats):
+            t['lon'], t['lat'] = lon, lat
     return jsonify(ts)
 
 
