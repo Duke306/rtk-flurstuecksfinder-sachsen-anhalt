@@ -28,7 +28,8 @@
 - 👆 Flurstück und Zielpunkte direkt **auf der Karte antippen**
 - 🌐 **SAPOS HEPS/NTRIP** für RTK-Korrekturdaten über Smartphone-Hotspot
 - 📶 Live-Status für WLAN, Internet, SAPOS, RTCM, Satelliten, HDOP und RTK FIX/FLOAT
-- 📏 **Höhenmodus** mit MSL und lokalem AGL-Bezug, Sollhöhe, Toleranzampel, Mittelung und Streuung
+- 📏 **Höhenmodus v6** mit intuitivem Messablauf, relativer/absoluter Sollhöhe, Toleranzanzeige und Messqualitätsbewertung
+- 📌 gespeicherte Höhenpunkte **H1, H2, H3 …** und **REF** direkt auf der Karte, anklickbar und ansteuerbar
 - 💾 landesweite ALKIS-Datenbank lokal auf der SD-Karte; Internet wird draußen nur noch für SAPOS benötigt
 - 📱 Smartphone als Display — kein Display am Raspberry Pi erforderlich
 
@@ -173,32 +174,31 @@ Hilfspunkte können mit 2 m, 5 m oder 10 m Abstand erzeugt werden. Auf der Karte
 
 ## Höhenmodus
 
-Der Höhenmodus speichert mehrere RTK-FIX-Messungen über einen einstellbaren Zeitraum und zeigt unter anderem:
+Version 6 trennt die Höhenmessung in drei einfache Ansichten: **Messen**, **Punkte** und **Einstellungen**. Die Hauptansicht zeigt nur die Informationen, die draußen direkt benötigt werden: RTK-Status, Isthöhe, Sollabweichung, „zu hoch / zu tief“ und die Schaltfläche zum Speichern eines Messpunkts.
 
-- Mittelwert
-- Anzahl der Samples
-- Sigma / Streuung
-- Spannweite
-- Stabhöhenkorrektur
-- Sollhöhe
-- Abweichung in mm
-- Toleranzampel
+### Relative Höhe
 
-### MSL
+Für relative Messungen wird zuerst bewusst ein **Referenzpunkt (REF)** aufgenommen. Danach wird eine Sollhöhe relativ zu diesem Punkt vorgegeben, z. B. `+0.300 m`. Das UI zeigt live die Abweichung in Millimetern und eindeutig **ZU HOCH** bzw. **ZU TIEF**.
 
-**MSL** ist die vom GNSS/NMEA-GGA gemeldete Höhe über dem mittleren Meeresspiegel/Geoid. Eine absolute Sollhöhe kann z. B. als `78.450 m` vorgegeben werden.
+> Intern bleibt aus Kompatibilitätsgründen die Bezeichnung `AGL` in der gespeicherten Konfiguration erhalten. Im Benutzerinterface heißt der Modus verständlicher **Relative Höhe**.
 
-### AGL / lokaler Bezug
+### Absolute Höhe (MSL)
 
-Der AGL-Modus des Projekts ist ein **lokaler relativer Höhenbezug** zu einem vom Nutzer gesetzten Referenzpunkt. Wird der Referenzpunkt auf Gelände gesetzt, entspricht dies praktisch einer Höhe über diesem Gelände-Bezug.
+Im MSL-Modus wird direkt gegen eine absolute orthometrische Sollhöhe gearbeitet, z. B. `78.450 m`. Grundlage ist die vom GNSS/NMEA-GGA gemeldete Höhe über Geoid/Meeresspiegel, korrigiert um die eingestellte Stabhöhe.
 
-Beispiel:
+### Höhenpunkte auf der Karte
 
-```text
-Referenz: OK Gelände
-Soll AGL: +0.300 m
-Toleranz: ±20 mm
-```
+Gespeicherte Messungen erscheinen direkt in der Offlinekarte:
+
+- **REF**: aktiver Referenzpunkt, blau hervorgehoben
+- **H1, H2, H3 …**: normale Höhenmesspunkte
+- **grün / gelb / rot**: Status der Sollabweichung
+- Klick auf einen Punkt zeigt MSL, relative Höhe, Abweichung, Sigma, Messdauer und Sample-Anzahl
+- Punkte können direkt **angesteuert**, **als Referenz gesetzt**, **benannt** oder **gelöscht** werden
+
+Sollabweichung und Messqualität werden getrennt bewertet: Ein Punkt kann also in der Solltoleranz liegen, aber wegen hoher Streuung trotzdem als qualitativ schwach gekennzeichnet sein.
+
+Die Messdauer, Stabhöhe und Toleranz liegen in **Einstellungen**, damit die eigentliche Messansicht übersichtlich bleibt. Bestehende `height_points.json`-Dateien aus v5 werden weiter eingelesen.
 
 > [!WARNING]
 > RTK-GNSS ist in der Höhe typischerweise schwächer als in der Lage. Für millimetergenaue Endkontrollen an Bodenplatten, Schalungen oder Fundamenten sollte zusätzlich ein Nivelliergerät bzw. Rotationslaser verwendet werden.
