@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 6.1.1 — 2026-09-16
+
+- Flurstücksauswahl unterstützt ältere `parcel_db.py` ohne `parcel_and_geojson`; aktuelle Helfer behalten die Einzelabfrage
+- Nordorientierte Navigations-Minikarte mit Position, Ziel, Verbindungslinie und ausgewähltem Flurstück
+- Zielrichtung in Grad und Himmelsrichtung sowie Bewegungsrichtung; langsame Bewegung wird über mehrere Aktualisierungen erfasst
+- Integration der bereitgestellten `app_v6_1_1.py` unter Erhalt der V6-Höhenkorrekturen und Performance-Verbesserungen
+
+### Bereits integrierte Performance-Verbesserungen
 
 - Geometrie-Cache mit unveränderlichen Werten, maximal 128 Einträgen und 8 MiB bilanziertem Speicherbudget (#3)
 - Gebündelte Koordinatenumrechnung für Geometrien und Navigationsziele (#4)

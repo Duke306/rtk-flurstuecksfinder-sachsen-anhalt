@@ -41,5 +41,39 @@ const run = code => vm.runInContext(code,ctx);
   // Repeated button taps while measuring must not issue another request.
   ctx.fetch=()=>{throw new Error('duplicate capture request')};
   run('heightMeasuring=true');await run("measureHeight('reference')");
-  console.log('PASS: zero pole, stale fix, legacy settings, delayed map, duplicate capture');
+  assert.equal(run('compassName(0)'), 'N');
+  assert.equal(run('compassName(90)'), 'E');
+  assert.equal(run('compassName(-90)'), 'W');
+  assert.equal(run('compassName(null)'), '--');
+  assert.ok(run('miniZoom(1) > miniZoom(100)'));
+  run("updateMiniNav({E:0,N:0,lon:11,lat:51,nav:null})");
+  run("updateMiniNav({E:.1,N:0,lon:11,lat:51,nav:null})");
+  assert.equal(run('miniMoveBearing'), null);
+  run("updateMiniNav({E:.21,N:0,lon:11,lat:51,nav:{bearing:90,distance:5}})");
+  assert.equal(run('miniMoveBearing'),90);
+  assert.equal(ctx.navbearing.textContent,'Zielrichtung: 090° · E');
+  run("updateMiniNav({E:10,N:10,lon:null,lat:null,nav:null})");
+  assert.equal(run('miniMoveE'), .21);
+  // Exercise mini-map setup and route updates without WebGL or network.
+  let miniOptions, camera;
+  const sources = {}, events = {};
+  ctx.document.createElement = () => ({...element(),querySelector:()=>({style:{}})});
+  ctx.maplibregl = {
+    Map: function(options) { miniOptions=options; this.addControl=()=>{};
+      this.on=(name,fn)=>{events[name]=fn}; this.isStyleLoaded=()=>true;
+      this.addSource=(id,source)=>{sources[id]={data:source.data,setData(data){this.data=data}}};
+      this.addLayer=()=>{}; this.getSource=id=>sources[id]; this.easeTo=o=>{camera=o}; },
+    AttributionControl: function(){},
+    Marker: function(options) {this.setLngLat=()=>this;this.addTo=()=>this;
+      this.getElement=()=>options.element;this.remove=()=>{};}
+  };
+  run('initMiniMap()'); events.load();
+  assert.equal(miniOptions.bearing,0); assert.equal(miniOptions.interactive,false);
+  run("target={lon:11.1,lat:51.1};updateMiniNav({E:1,N:0,lon:11,lat:51,nav:{bearing:90,distance:5}})");
+  assert.equal(sources['mini-route'].data.features[0].geometry.type,'LineString');
+  assert.equal(camera.bearing,0); assert.equal(camera.pitch,0);
+  run("target=null;updateMiniNav({E:1,N:0,lon:11,lat:51,nav:null})");
+  assert.equal(sources['mini-route'].data.features.length,0);
+  assert.equal(run('miniTargetMarker'),null);
+  console.log('PASS: zero pole, stale fix, legacy settings, delayed map, duplicate capture, navigation bearings and slow movement');
 })().catch(e=>{console.error(e);process.exitCode=1});
