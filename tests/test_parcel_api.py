@@ -122,6 +122,43 @@ class ParcelRouteTests(unittest.TestCase):
         self.assertEqual(data['feature']['type'], 'Feature')
         self.assertEqual(data['feature']['geometry']['type'], 'Polygon')
 
+    def test_legacy_helper_without_combined_method(self):
+        from unittest.mock import patch
+        db = self.app_module.parcels
+        class LegacyHelper:
+            def get(self, pid, with_geom=False):
+                return db.get(pid, with_geom)
+            def parcel_geojson(self, pid):
+                return db.parcel_geojson(pid)
+        expected = self.client.get('/api/parcel/1').get_json()
+        with patch.object(self.app_module, 'parcels', LegacyHelper()):
+            response = self.client.get('/api/parcel/1')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.get_json(), expected)
+            missing = self.client.get('/api/parcel/9999')
+            self.assertEqual(missing.status_code, 404)
+            self.assertEqual(missing.get_json(), {'error': 'nicht gefunden'})
+
+    def test_current_route_still_uses_one_select(self):
+        conn = self.app_module.parcels.conn()
+        statements = []
+        conn.set_trace_callback(statements.append)
+        try:
+            self.assertEqual(self.client.get('/api/parcel/1').status_code, 200)
+        finally:
+            conn.set_trace_callback(None)
+        self.assertEqual(len([s for s in statements if s.lstrip().upper().startswith('SELECT')]), 1)
+
+    def test_legacy_missing_geometry_returns_404(self):
+        from unittest.mock import patch
+        class LegacyHelper:
+            def get(self, pid, with_geom=False):
+                return {'id': pid}
+            def parcel_geojson(self, pid):
+                return None
+        with patch.object(self.app_module, 'parcels', LegacyHelper()):
+            self.assertEqual(self.client.get('/api/parcel/1').status_code, 404)
+
     def test_missing_parcel_returns_404(self):
         resp = self.client.get('/api/parcel/9999')
         self.assertEqual(resp.status_code, 404)

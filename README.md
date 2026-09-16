@@ -97,6 +97,21 @@ http://rtk.local:5000
 
 > Wenn `rtk.local` im Netz nicht aufgelöst wird, die IP des Pi mit `hostname -I` anzeigen und `http://<IP>:5000` öffnen.
 
+## Aktualisierung auf 6.1.1
+
+Version 6.1.1 unterstützt auch ältere lokal installierte Datenbankhelfer und ergänzt eine nordorientierte Minikarte in der Navigation. Die Zielrichtung ist eine Richtung gegenüber Norden; der Bewegungspfeil ist kein Gerätekompass.
+
+Im bestehenden Git-Checkout auf dem Raspberry Pi als Benutzer `pi` ausführen:
+
+```bash
+git pull --ff-only origin main
+bash install.sh
+```
+
+Das Installationsskript kopiert **app.py und parcel_db.py gemeinsam** nach `/home/pi/rtk-rover` und startet den Dienst neu. Vorhandene ALKIS-/MBTiles-Dateien, Höhenpunkte und eine vorhandene `rtk.env` bleiben erhalten. Ein `git pull` allein aktualisiert die separat installierte Anwendung nicht. Danach die Browserseite neu laden und die Anzeige **v6.1.1** prüfen.
+
+Bei einem Fehler durch eine ältere `parcel_db.py` muss die ALKIS-Datenbank nicht neu aufgebaut werden. Der Kompatibilitätsweg ersetzt keine Reparatur einer tatsächlich beschädigten SQLite-Datei.
+
 ## Landesweite ALKIS-Datenbank
 
 Die große Datenbank liegt **nicht im Repository**. Sie wird aus dem amtlichen Open-Data-Download des LVermGeo Sachsen-Anhalt erzeugt.
