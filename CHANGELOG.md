@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Netzwerkstatus wird außerhalb der gemeinsamen Statussperre ermittelt, damit langsame WLAN- und Internetabfragen GNSS-Aktualisierungen und API-Statusabfragen nicht blockieren
+
 ## 6.1.1 — 2026-09-16
 
 - Flurstücksauswahl unterstützt ältere `parcel_db.py` ohne `parcel_and_geojson`; aktuelle Helfer behalten die Einzelabfrage
