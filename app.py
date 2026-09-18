@@ -161,8 +161,10 @@ def internet_ok():
 
 def network_worker():
     while True:
+        # Slow network probes must not hold up receiver updates or API snapshots.
+        network_status = dict(wifi_ssid=get_wifi_ssid(), local_ip=get_local_ip(), internet=internet_ok())
         with state_lock:
-            state.update(wifi_ssid=get_wifi_ssid(), local_ip=get_local_ip(), internet=internet_ok())
+            state.update(network_status)
         time.sleep(3)
 
 
